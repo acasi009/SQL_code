@@ -1,0 +1,373 @@
+USE Master;
+GO
+DROP DATABASE IF EXISTS schooldb;
+GO
+CREATE DATABASE schooldb;
+GO
+USE schooldb;
+PRINT 'Part A Completed'
+
+
+-- ****************************
+
+
+-- ****************************
+-- Write statements below 
+IF OBJECT_ID ( 'usp_dropTables' ) IS NOT NULL
+DROP PROCEDURE usp_dropTables;  
+GO     
+
+CREATE PROCEDURE usp_dropTables
+AS
+BEGIN
+    DROP TABLE IF EXISTS Student_Courses;
+    DROP TABLE IF EXISTS CourseList;
+    DROP TABLE IF EXISTS StudentContacts;
+    DROP TABLE IF EXISTS ContactType;
+    DROP TABLE IF EXISTS Employees;
+    DROP TABLE IF EXISTS EmpJobPosition;    
+    DROP TABLE IF EXISTS StudentInformation;    
+END ;
+GO
+
+EXEC usp_dropTables;
+
+PRINT 'Part B Completed'
+Go
+
+-- ****************************
+-- PART C
+-- ****************************
+-- Write statements below 
+
+CREATE TABLE StudentInformation
+(StudentID INT NOT NULL PRIMARY KEY IDENTITY(100,1),
+Title varchar(50) NULL,
+FirstName varchar(50),
+LastName varchar(50),
+Address1 varchar(50),
+Address2 varchar(50),
+City char (50),
+County char (20),
+Zip char(20),
+Country char(50),
+Telephone varchar(15),
+Email varchar(50),
+Enrolled varchar(50),
+AltTelephone varchar(50) )
+
+CREATE TABLE CourseList
+(CourseID INT NOT NULL PRIMARY KEY IDENTITY(10,1),
+CourseDescription varchar(50) ,
+CourseCost Money ,
+CourseDurationYears INT ,
+Notes varchar(50))
+
+CREATE TABLE EmpJobPosition
+(EmpJobPositionID INT PRIMARY KEY IDENTITY(1,1),
+EmployeePosition Nvarchar(50))
+
+CREATE TABLE Employees
+(EmployeeID INT PRIMARY KEY IDENTITY(1000,1),
+EmployeeName varchar(50),
+EmployeePositionID INT FOREIGN KEY REFERENCES EmpJobPosition(EmpJobPositionID),
+EmployeePassword varchar(50),
+Access varchar (10))
+
+CREATE TABLE ContactType
+(ContactTypeID INT PRIMARY KEY IDENTITY(1,1),
+ContactType Nvarchar(50))
+
+CREATE TABLE StudentContacts
+(ContactID INT NOT NULL IDENTITY(10000,1),
+StudentID INT NOT NULL FOREIGN KEY REFERENCES StudentInformation(StudentID),
+ContactTypeID INT NOT NULL FOREIGN KEY REFERENCES ContactType(ContactTypeID),
+ContactDate DATETIME,
+EmployeeID INT NOT NULL FOREIGN KEY REFERENCES Employees(EmployeeID),
+ContactDetails varchar(50) NULL)
+
+CREATE TABLE Student_Courses
+(StudentCourseID INT PRIMARY KEY IDENTITY(1,1),
+StudentID INT FOREIGN KEY REFERENCES StudentInformation(StudentID),
+CourseID INT FOREIGN KEY REFERENCES CourseList(CourseID),
+CourseStartDate DATETIME,
+CourseComplete DATETIME)
+
+PRINT 'Part C Completed'
+Go
+-- ****************************
+-- PART D
+-- ****************************
+-- Write statements below 
+
+ALTER TABLE Student_Courses
+ADD CONSTRAINT CompostieKey_StudentID_CourseID UNIQUE (StudentID, CourseID)
+GO
+
+ALTER TABLE StudentInformation
+ADD CreatedDateTime DATETIME not null
+constraint ak_DefaultCreatedDateTime default (getdate())
+
+ALTER TABLE StudentInformation
+DROP COLUMN AltTelephone
+
+CREATE INDEX IX_LastName
+ON StudentInformation (LastName)
+
+PRINT 'Part D Completed'
+Go
+-- ****************************
+-- PART E
+-- ****************************
+-- Write statements below 
+
+CREATE TRIGGER trg_assignEmail
+ON StudentInformation
+AFTER INSERT
+AS
+BEGIN
+ IF(SELECT Email FROM INSERTED) IS NULL
+  BEGIN
+   SET NOCOUNT ON;
+   UPDATE StudentInformation
+   SET Email =  (i.FirstName + '.' + i.LastName + '@disney.com')
+   FROM Inserted i
+   WHERE StudentInformation.Email is NULL
+  END
+END
+GO
+
+PRINT 'Part E Completed'
+
+-- ****************************
+-- PART F
+-- ****************************
+
+INSERT INTO StudentInformation
+   (FirstName,LastName)
+VALUES
+   ('Mickey', 'Mouse');
+
+INSERT INTO StudentInformation
+   (FirstName,LastName)
+VALUES
+   ('Minnie', 'Mouse');
+
+INSERT INTO StudentInformation
+   (FirstName,LastName)
+VALUES
+   ('Donald', 'Duck');
+SELECT * FROM StudentInformation;
+
+INSERT INTO CourseList
+   (CourseDescription)
+VALUES
+   ('Advanced Math');
+
+INSERT INTO CourseList
+   (CourseDescription)
+VALUES
+   ('Intermediate Math');
+
+INSERT INTO CourseList
+   (CourseDescription)
+VALUES
+   ('Beginning Computer Science');
+
+INSERT INTO CourseList
+   (CourseDescription)
+VALUES
+   ('Advanced Computer Science');
+select * from CourseList;
+
+INSERT INTO Student_Courses
+   (StudentID,CourseID,CourseStartDate)
+VALUES
+   (100, 10, '01/05/2018');
+
+INSERT INTO Student_Courses
+   (StudentID,CourseID,CourseStartDate)
+VALUES
+   (101, 11, '01/05/2018');
+
+INSERT INTO Student_Courses
+   (StudentID,CourseID,CourseStartDate)
+VALUES
+   (102, 11, '01/05/2018');
+INSERT INTO Student_Courses
+   (StudentID,CourseID,CourseStartDate)
+VALUES
+   (100, 11, '01/05/2018');
+
+INSERT INTO Student_Courses
+   (StudentID,CourseID,CourseStartDate)
+VALUES
+   (102, 13, '01/05/2018');
+select * from Student_Courses;
+
+INSERT INTO EmpJobPosition
+   (EmployeePosition)
+VALUES
+   ('Math Instructor');
+
+INSERT INTO EmpJobPosition
+   (EmployeePosition)
+VALUES
+   ('Computer Science');
+select * from EmpJobPosition
+
+INSERT INTO Employees
+   (EmployeeName,EmployeePositionID)
+VALUES
+   ('Walt Disney', 1);
+
+INSERT INTO Employees
+   (EmployeeName,EmployeePositionID)
+VALUES
+   ('John Lasseter', 2);
+
+INSERT INTO Employees
+   (EmployeeName,EmployeePositionID)
+VALUES
+   ('Danny Hillis', 2);
+select * from Employees;
+
+INSERT INTO ContactType
+   (ContactType)
+VALUES
+   ('Tutor');
+
+INSERT INTO ContactType
+   (ContactType)
+VALUES
+   ('Homework Support');
+
+INSERT INTO ContactType
+   (ContactType)
+VALUES
+   ('Conference');
+SELECT * from ContactType;
+
+INSERT INTO StudentContacts
+   (StudentID,ContactTypeID,EmployeeID,ContactDate,ContactDetails)
+VALUES
+   (100, 1, 1000, '11/15/2017', 'Micky and Walt Math Tutoring');
+
+INSERT INTO StudentContacts
+   (StudentID,ContactTypeID,EmployeeID,ContactDate,ContactDetails)
+VALUES
+   (101, 2, 1001, '11/18/2017', 'Minnie and John Homework support');
+
+INSERT INTO StudentContacts
+   (StudentID,ContactTypeID,EmployeeID,ContactDate,ContactDetails)
+VALUES
+   (100, 3, 1001, '11/18/2017', 'Micky and Walt Conference');
+
+INSERT INTO StudentContacts
+   (StudentID,ContactTypeID,EmployeeID,ContactDate,ContactDetails)
+VALUES
+   (102, 2, 1002, '11/20/2017', 'Donald and Danny Homework support');
+
+SELECT * from StudentContacts;
+
+-- Note for Part E, use these two inserts as examples to test the trigger
+-- They will also be needed if you’re using the examples for Part G
+INSERT INTO StudentInformation
+   (FirstName,LastName,Email)
+VALUES
+   ('Porky', 'Pig', 'porky.pig@warnerbros.com');
+INSERT INTO StudentInformation
+   (FirstName,LastName)
+VALUES
+   ('Snow', 'White');
+
+PRINT 'Part F Completed'
+
+-- ****************************
+-- PART G
+-- ****************************
+-- Write statements below 
+
+IF OBJECT_ID ( 'usp_addQuickContacts' ) IS NOT NULL
+DROP PROCEDURE usp_addQuickContacts;  
+GO 
+
+CREATE PROCEDURE usp_addQuickContact
+@StudentEmail varchar(50),
+@EmployeeName varchar(50),
+@ContactDetails varchar(50),
+@ContactType varchar(50)
+AS
+BEGIN
+ DECLARE @StudentID int, @ContactTypeID int, @EmployeeID int
+
+ IF NOT EXISTS (SELECT * FROM ContactType WHERE ContactType = @ContactType)
+ BEGIN
+  INSERT INTO ContactType
+   (ContactType)
+  VALUES
+   (@ContactType)  
+ END
+
+ IF EXISTS (SELECT * FROM ContactType WHERE ContactType = @ContactType)
+ BEGIN
+  SELECT @StudentID = StudentID FROM StudentInformation WHERE Email = @StudentEmail
+  SELECT @ContactTypeID = ContactTypeID FROM ContactType WHERE ContactType = @ContactType
+  SELECT @EmployeeID = EmployeeID FROM Employees WHERE EmployeeName = @EmployeeName
+
+  INSERT INTO StudentContacts 
+   (StudentID, ContactTypeID, ContactDate, EmployeeID, ContactDetails)
+  VALUES
+   (@StudentID, @ContactTypeID, (GETDATE()), @EmployeeID, @ContactDetails);  
+ END
+END
+GO
+
+EXEC usp_addQuickContact 'minnie.mouse@disney.com','John Lasseter','Minnie getting Homework Support from John','Homework Support' 
+EXEC usp_addQuickContact 'porky.pig@warnerbros.com','John Lasseter','Porky studying with John for Test prep','Test Prep'
+
+
+PRINT 'Part G Completed'
+
+-- ****************************
+-- PART H
+-- ****************************
+-- Write statements below 
+IF OBJECT_ID ( 'usp_getCourseRosterByName' ) IS NOT NULL
+DROP PROCEDURE usp_getCourseRosterByName;  
+GO  
+
+CREATE PROCEDURE usp_getCourseRosterByName
+@CourseDescription varchar(50)
+AS
+ BEGIN 
+  SELECT cl.CourseDescription, si.FirstName, si.LastName
+  FROM CourseList cl
+   INNER JOIN Student_Courses sc ON sc.CourseID = cl.CourseID
+   INNER JOIN StudentInformation si ON sc.StudentID = si.StudentID
+  WHERE CourseDescription = @CourseDescription
+END
+go
+
+EXEC usp_getCourseRosterByName 'Intermediate Math'
+
+PRINT 'Part H Completed'
+go
+-- ****************************
+-- Part I
+-- ****************************
+-- Write statements below 
+IF OBJECT_ID ( 'vtutorContacts' ) IS NOT NULL
+DROP VIEW vtutorContacts;  
+GO  
+
+CREATE VIEW vtutorContacts
+AS
+ SELECT e.EmployeeName, si.FirstName+si.LastName AS StudentName, sc.ContactDetails, sc.ContactDate
+ FROM Employees e INNER JOIN StudentContacts sc on e.EmployeeID = sc.EmployeeID
+ INNER JOIN StudentInformation si on sc.StudentID = si.StudentID
+ INNER JOIN ContactType ct on sc.ContactTypeID = ct.ContactTypeID
+ 
+SELECT EmployeeName
+FROM vtutorContacts
+WHERE ContactType = 'Tutor'
