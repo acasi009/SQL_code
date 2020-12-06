@@ -1,2 +1,3 @@
 # SQL_code
-Examples of SQL Code
+Submitted final assignment from my UCLA Extension class, COM SCI X 414.61 INTRODUCTION TO SQL.
+
